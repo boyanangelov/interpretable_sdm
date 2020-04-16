@@ -90,7 +90,9 @@ mod <- train(lrn, task)
 
 # Generate explanations ---------------------------------------------------
 
+set.seed(42)
 explainer <- lime(data_train, mod)
+set.seed(42)
 explanation <-
   lime::explain(sample_data,
                 explainer,
