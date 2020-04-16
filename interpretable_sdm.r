@@ -2,10 +2,14 @@ library(sdmbench)
 library(mlr)
 library(lime)
 library(dplyr)
+library(rsample)
 
-set.seed(42)
-occ_data_raw <- get_benchmarking_data("Loxodonta africana", limit = 1000)
+# Get and prepare data ----------------------------------------------------
 
+occ_data_raw <-
+  get_benchmarking_data("Loxodonta africana", limit = 1000)
+
+# rename bioclimatic variables to be more descriptive
 names(occ_data_raw$raster_data$climate_variables) <- c(
   "mean_temp",
   "mean_diurnal",
@@ -56,28 +60,42 @@ occ_data$label <- as.factor(occ_data$label)
 
 coordinates_df <- rbind(occ_data_raw$raster_data$coords_presence,
                         occ_data_raw$raster_data$background)
+
+occ_data <-
+  normalizeFeatures(occ_data, method = "standardize")
+
 occ_data <- cbind(occ_data, coordinates_df)
 occ_data <- na.omit(occ_data)
 
-train_test_split <- rsample::initial_split(occ_data, prop = 0.7)
-data_train <- rsample::training(train_test_split)
-data.test  <- rsample::testing(train_test_split)
+# Split data for machine learning -----------------------------------------
 
+set.seed(42)
+train_test_split <- initial_split(occ_data, prop = 0.7)
+data_train <- training(train_test_split)
+data_test  <- testing(train_test_split)
 data_train$x <- NULL
 data_train$y <- NULL
-
-data_test_subset <- data.test %>% filter(label == 1)
-sample_data <- sample_n(data_test_subset, 3)
+data_test_subset <- data_test %>% filter(label == 1)
+sample_data <- withr::with_seed(44, sample_n(data_test_subset, 3))
 sample_data_coords <- dplyr::select(sample_data, c("x", "y"))
 sample_data$x <- NULL
 sample_data$y <- NULL
 
-task <- makeClassifTask(id = "model", data = data_train, target = "label")
+# Train model -------------------------------------------------------------
+
+task <-
+  makeClassifTask(id = "model", data = data_train, target = "label")
 lrn <- makeLearner("classif.randomForest", predict.type = "prob")
 mod <- train(lrn, task)
 
+# Generate explanations ---------------------------------------------------
+
 explainer <- lime(data_train, mod)
-explanation <- lime::explain(sample_data, explainer, n_labels = 1, n_features = 5)
+explanation <-
+  lime::explain(sample_data,
+                explainer,
+                n_labels = 1,
+                n_features = 5)
 plot_features(explanation)
 
 customPredictFun <- function(model, data) {
@@ -87,8 +105,11 @@ customPredictFun <- function(model, data) {
   return(v$presence)
 }
 
-pr <- dismo::predict(occ_data_raw$raster_data$climate_variables, mlr::getLearnerModel(mod, TRUE), fun = customPredictFun)
-
-rf_map <- raster::spplot(pr, main = "Predicted Habitat Suitability Map (Random Forest)", ylab = "Suitability")
+pr <-
+  dismo::predict(RStoolbox::normImage(occ_data_raw$raster_data$climate_variables),
+                 mlr::getLearnerModel(mod, TRUE),
+                 fun = customPredictFun)
+rf_map <-
+  raster::spplot(pr, main = "Predicted Habitat Suitability Map (Random Forest)", ylab = "Suitability")
 rf_map
 
