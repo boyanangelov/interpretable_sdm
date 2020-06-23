@@ -1,5 +1,6 @@
 library(sdmbench)
 library(mlr)
+library(iml)
 library(lime)
 library(dplyr)
 library(rsample)
@@ -12,51 +13,6 @@ library(ggplot2)
 occ_data_raw <-
   get_benchmarking_data("Loxodonta africana", limit = 1000)
 
-# rename bioclimatic variables to be more descriptive
-names(occ_data_raw$raster_data$climate_variables) <- c(
-  "Annual_Mean_Temperature",
-  "Mean_Diurnal_Range",
-  "Isothermality",
-  "Temperature_Seasonality",
-  "Max_Temperature_of_Warmest_Month",
-  "Min_Temperature_of_Coldest_Month",
-  "Temperature_Annual_Range",
-  "Mean_Temperature_of_Wettest_Quarter",
-  "Mean_Temperature_of_Driest_Quarter",
-  "Mean_Temperature_of_Warmest_Quarter",
-  "Mean_Temperature_of_Coldest_Quarter",
-  "Annual_Precipitation",
-  "Precipitation_of_Wettest_Month",
-  "Precipitation_of_Driest_Month",
-  "Precipitation_Seasonality",
-  "Precipitation_of_Wettest_Quarter",
-  "Precipitation_of_Driest_Quarter",
-  "Precipitation_of_Warmest_Quarter",
-  "Precipitation_of_Coldest_Quarter"
-)
-
-names(occ_data_raw$df_data) <- c(
-  "Annual_Mean_Temperature",
-  "Mean_Diurnal_Range",
-  "Isothermality",
-  "Temperature_Seasonality",
-  "Max_Temperature_of_Warmest_Month",
-  "Min_Temperature_of_Coldest_Month",
-  "Temperature_Annual_Range",
-  "Mean_Temperature_of_Wettest_Quarter",
-  "Mean_Temperature_of_Driest_Quarter",
-  "Mean_Temperature_of_Warmest_Quarter",
-  "Mean_Temperature_of_Coldest_Quarter",
-  "Annual_Precipitation",
-  "Precipitation_of_Wettest_Month",
-  "Precipitation_of_Driest_Month",
-  "Precipitation_Seasonality",
-  "Precipitation_of_Wettest_Quarter",
-  "Precipitation_of_Driest_Quarter",
-  "Precipitation_of_Warmest_Quarter",
-  "Precipitation_of_Coldest_Quarter",
-  "label"
-)
 
 occ_data <- occ_data_raw$df_data
 
@@ -98,6 +54,15 @@ top_n(VIMP, n=5, importance) %>%
 # Performance
 performance(pred, measures=auc)
 
+# ALE plot
+predictor <-
+  Predictor$new(mod, data = data_train, class = 1, y = "label")
+ale <- FeatureEffect$new(predictor, feature = "bio16")
+ale$plot() +
+  theme_minimal() +
+  ggtitle("ALE Feature Effect") +
+  xlab("Precipitation of Wettest Quarter")
+
 # Generate explanations ---------------------------------------------------
 # resampling
 sample_data <- withr::with_seed(1, sample_n(data_test_subset, 3))
@@ -133,8 +98,7 @@ pr <-
 
 coordinates(sample_data_coords) <- ~ x + y
 rf_map <-
-  spplot(pr, main = "Habitat Suitability Map", 
+  spplot(pr, main = "Habitat Suitability Map",
          scales = list(draw = TRUE),
          sp.layout = list("sp.points", sample_data_coords, pch=1, cex=1.2, lwd=2, col="white"))
 rf_map
-
