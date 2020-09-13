@@ -9,7 +9,7 @@ library(sp)
 library(ggplot2)
 
 # Get and prepare data ----------------------------------------------------
-
+set.seed(42)
 occ_data_raw <-
   get_benchmarking_data("Loxodonta africana", limit = 1000)
 
