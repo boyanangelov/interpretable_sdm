@@ -1,3 +1,5 @@
+library(devtools)
+install_github("boyanangelov/sdmbench")
 library(sdmbench)
 library(mlr)
 library(iml)
