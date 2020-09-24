@@ -1,18 +1,14 @@
 [Last update: 24 September 2020]
 
-R version 4.0.2 and above is required to run this example.
+R version `4.0.2` and above is required to run this example.
 
-package sdmbench can be downloaded with the following codes (it requires the package 'devtools'):
-----------
-  library(devtools)
-  install_github("boyanangelov/sdmbench")
-----------
+The `sdmbench` package can be downloaded with the following code (it requires the package 'devtools'):
 
-For Windows environment, to install sdmbench, it is probably required to install Rtools40.
-Rtools40 is available at https://cran.r-project.org/bin/windows/Rtools/
+```r
+library(devtools)
+install_github("boyanangelov/sdmbench")
+```
 
-We do not obtain the dataset of African Elephant and raster data from online anymore in this showcase
-but read the datasets locally, because whenever the online datasets are updated, the results become not reproducible.
-
+If you are working in a Windows environment, to install `sdmbench` is probably required to install `Rtools40` as well. It is available at https://cran.r-project.org/bin/windows/Rtools/. For reproducibility purposes we do not obtain the dataset of African Elephant GBIF and raster data dynamically in this example, but read the datasets locally instead (stored as`RDS` files).
 
 [![DOI](https://zenodo.org/badge/254860266.svg)](https://zenodo.org/badge/latestdoi/254860266)
