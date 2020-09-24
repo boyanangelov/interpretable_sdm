@@ -10,9 +10,12 @@ library(ggplot2)
 
 # Get and prepare data ----------------------------------------------------
 set.seed(42)
-occ_data_raw <-
-  get_benchmarking_data("Loxodonta africana", limit = 1000)
 
+# this function downloads and stores the data, and to make the rest of the script reproducible (GBIF data can be updated with new observations) we are loading a stored static dataset
+# occ_data_raw <-
+#   get_benchmarking_data("Loxodonta africana", limit = 1000)
+# saveRDS(occ_data_raw, file = "occ_data_raw.RDS")
+occ_data_raw <- readRDS("occ_data_raw.RDS")
 
 occ_data <- occ_data_raw$df_data
 
@@ -88,8 +91,11 @@ customPredictFun <- function(model, data) {
   return(v$presence)
 }
 
-normalized_raster <- RStoolbox::normImage(occ_data_raw$raster_data$climate_variables)
-names(normalized_raster) <- names(occ_data_raw$raster_data$climate_variables)
+# we are loading the raster for reproducibility purposes 
+# normalized_raster <- RStoolbox::normImage(occ_data_raw$raster_data$climate_variables)
+# saveRDS(normalized_raster, file = "normalized_raster.RDS")
+normalized_raster <- readRDS("normalized_raster.RDS")
+
 pr <-
   dismo::predict(normalized_raster,
                  mlr::getLearnerModel(mod, TRUE),
