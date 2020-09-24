@@ -7,6 +7,7 @@ library(rsample)
 library(latticeExtra)
 library(sp)
 library(ggplot2)
+library(maptools)
 
 # Get and prepare data ----------------------------------------------------
 set.seed(42)
@@ -68,7 +69,7 @@ ale$plot() +
 
 # Generate explanations ---------------------------------------------------
 # resampling
-sample_data <- withr::with_seed(1, sample_n(data_test_subset, 3))
+sample_data <- withr::with_seed(10, sample_n(data_test_subset, 3))
 sample_data_coords <- dplyr::select(sample_data, c("x", "y"))
 sample_data$x <- NULL
 sample_data$y <- NULL
@@ -103,8 +104,17 @@ pr <-
 
 
 coordinates(sample_data_coords) <- ~ x + y
+
+sl1 <- list("sp.points", sample_data_coords, pch=1, cex=1.2, lwd=2, col="white")
+sl2 <- list("sp.pointLabel", sample_data_coords, label=c("Case 1","Case 2","Case 3"),
+            cex=0.9, col="white", fontface=2)
+
 rf_map <-
   spplot(pr, main = "Habitat Suitability Map",
          scales = list(draw = TRUE),
-         sp.layout = list("sp.points", sample_data_coords, pch=1, cex=1.2, lwd=2, col="white"))
+         sp.layout = list(sl1,sl2),
+         labels=TRUE
+  )
+
 rf_map
+
